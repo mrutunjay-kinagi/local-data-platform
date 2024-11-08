@@ -1,87 +1,162 @@
-Example: Basic Sphinx project for Read the Docs
-===============================================
+Local Data Platform
+===================
 
-.. image:: https://readthedocs.org/projects/example-sphinx-basic/badge/?version=latest
-    :target: https://example-sphinx-basic.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+Local Data Platform is a python library that uses open source tools to orchestrate a data platform operations locally for development and testing.  
+This library provides solutions for all stages ranging from ingestion to reporting all of which one can build data pipeline locally, test and easily scale up to cloud.
 
-.. This README.rst should work on Github and is also included in the Sphinx documentation project in docs/ - therefore, README.rst uses absolute links for most things so it renders properly on GitHub
+Problem Statement
+-----------------
 
-This example shows a basic Sphinx project with Read the Docs. You're encouraged to view it to get inspiration and copy & paste from the files in the source code. If you are using Read the Docs for the first time, have a look at the official `Read the Docs Tutorial <https://docs.readthedocs.io/en/stable/tutorial/index.html>`__.
++----------+---------------------------------------------------------------------------------------------------+
+| Question | Answer                                                                                            |
++==========+===================================================================================================+
+| What?    | a local data platform that can scale up to cloud                                                  |
++----------+---------------------------------------------------------------------------------------------------+
+| Why?     | save costs on cloud infra and development time                                                    |
++----------+---------------------------------------------------------------------------------------------------+
+| When?    | start of product development life cycle                                                           |
++----------+---------------------------------------------------------------------------------------------------+
+| Where?   | local first                                                                                       |
++----------+---------------------------------------------------------------------------------------------------+
+| Who?     | Business who want a product data platform that will run locally and scale up when the time comes. |
++----------+---------------------------------------------------------------------------------------------------+
 
-📚 `docs/ <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/docs/>`_
-    A basic Sphinx project lives in ``docs/``. All the ``*.rst`` make up sections in the documentation.
-⚙️ `.readthedocs.yaml <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/.readthedocs.yaml>`_
-    Read the Docs Build configuration is stored in ``.readthedocs.yaml``.
-⚙️ `docs/conf.py <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/docs/conf.py>`_
-    Both the configuration and the folder layout follow Sphinx default conventions. You can change the `Sphinx configuration values <https://www.sphinx-doc.org/en/master/usage/configuration.html>`_ in this file
-📍 `docs/requirements.txt <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/docs/requirements.txt>`_ and `docs/requirements.in <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/docs/requirements.in>`_
-    Python dependencies are `pinned <https://docs.readthedocs.io/en/latest/guides/reproducible-builds.html>`_ (uses `pip-tools <https://pip-tools.readthedocs.io/en/latest/>`_). Make sure to add your Python dependencies to ``requirements.txt`` or if you choose `pip-tools <https://pip-tools.readthedocs.io/en/latest/>`_, edit ``docs/requirements.in`` and remember to run ``pip-compile docs/requirements.in``.
-💡 `docs/api.rst <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/docs/api.rst>`_
-    By adding our example Python module ``lumache`` in the reStructuredText directive ``:autosummary:``, Sphinx will automatically scan this module and generate API docs.
-💡 `docs/usage.rst <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/docs/usage.rst>`_
-    Sphinx can automatically extract API documentation directly from Python modules, using for instance the ``:autofunction:`` directive.
-💡 `lumache.py <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/lumache.py>`_
-    API docs are generated for this example Python module - they use *docstrings* directly in the documentation, notice how this shows up in the rendered documentation.
-🔢 Git tags versioning
-    We use a basic versioning mechanism by adding a git tag for every release of the example project. All releases and their version numbers are visible on `example-sphinx-basic.readthedocs.io <https://example-sphinx-basic.readthedocs.io/en/latest/>`__.
-📜 `README.rst <https://github.com/readthedocs-examples/example-sphinx-basic/blob/main/README.rst>`_
-    Contents of this ``README.rst`` are visible on Github and included on `the documentation index page <https://example-sphinx-basic.readthedocs.io/en/latest/>`_ (Don't Repeat Yourself).
-⁉️ Questions / comments
-    If you have questions related to this example, feel free to can ask them as a Github issue `here <https://github.com/readthedocs-examples/example-sphinx-basic/issues>`_.
+Components
+----------
 
+It uses below tools:
+1. Ingestion using `Apache Arrow <https://arrow.apache.org/>`_ in `Parquet <https://parquet.apache.org/>`_ file format.
+2. Data Catalog using `Iceberg <https://iceberg.apache.org/>`_
+3. `DuckDB <https://duckdb.org/>`_ as Datawarehouse
+4. `DBT <https://www.getdbt.com/>`_ for transformation operations.
+5. `Apache Airflow <https://airflow.apache.org/>`_ for orchestration
 
-Example Project usage
----------------------
+Source
+------
 
-This project has a standard Sphinx layout which is built by Read the Docs almost the same way that you would build it locally (on your own laptop!).
+Our local data platform supports `Parquet Files` for now and new formats and sources will be added in subsequent releases.  
 
-You can build and view this documentation project locally - we recommend that you activate `a local Python virtual environment first <https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#creating-a-virtual-environment>`_:
+`Parquet Files` : High-performance columnar storage format, optimized for efficient reading and querying of large datasets.  
+
+Data Catalog with Apache Iceberg on SQLite
+------------------------------------------
+
+Our platform uses Apache Iceberg to manage large-scale datasets efficiently while ensuring ACID compliance, schema evolution, and performant queries.  
+
+Our platform leverages Apache Iceberg as the data catalog on top of SQLite for storing and transforming raw data.  
+
+Initially, raw data in form of Parquet files are ingested into SQLite. SQLite, being a lightweight, serverless database, serves as an intermediary layer where the data can be stored, processed, and transformed as needed. Apache Iceberg acts as the data catalog throughout the process. It manages metadata for all datasets, including raw data in SQLite.
+
+Transformations
+---------------
+
+Once raw data is ingested into SQLite, we use `DBT` (Data Build Tool) for transforming and modeling the data.
+
+Target
+------
+
+Once the transformations are complete, the processed and clean data is stored in `DuckDB` using Apache Iceberg's table format.  
+
+Apache Iceberg acts as a unified metadata layer across both the raw and processed data. The platform can handle complex data versioning, schema evolution, and partition pruning, ensuring optimal performance during querying. With DuckDB’s in-memory analytical capabilities and Iceberg’s efficient data layout, querying the processed data becomes highly performant and scalable.
+
+Example
+-------
+
+Sample Data
+~~~~~~~~~~~
+
+Data can be available as single file in the source format. For example New York Yellow taxi data is available to be pulled from `here <https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page>`_
 
 .. code-block:: console
 
-    # Install required Python dependencies (Sphinx etc.)
-    pip install -r docs/requirements.txt
+    curl https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2023-01.parquet -o /tmp/yellow_tripdata_2023-01.parquet
 
-    # Enter the Sphinx project
-    cd docs/
-    
-    # Run the raw sphinx-build command
-    sphinx-build -M html . _build/
+Ingestion Layer
+~~~~~~~~~~~~~~~
 
+Please refer given ingestion layer `python script <https://github.com/tusharchou/local-data-platform/blob/main/local-data-platform/nyc_yellow_taxi.py>`_
 
-You can also build the documentation locally with ``make``:
+Subsequent Layers
+~~~~~~~~~~~~~~~~~
 
-.. code-block:: console
+[yet to be released](null) . Please check the Plan and milestone below.
 
-    # Enter the Sphinx project
-    cd docs/
-    
-    # Build with make
-    make html
-    
-    # Open with your preferred browser, pointing it to the documentation index page
-    firefox _build/html/index.html
+Plan
+----
 
++-----------+----------------------+-------------+---------------+-----------------+--------------+
+| Milestone | Epic                 | Target Date | Delivery Date | Release Owner   | Comment      |
++===========+======================+=============+===============+=================+==============+
+| 0.1.0     | HelloWorld           | 1st Oct 24  | 1st Oct 24    | @tusharchou     | Good Start   |
++-----------+----------------------+-------------+---------------+-----------------+--------------+
+| 0.1.1     | Ingestion            | 3rd Oct 24  | 9th Oct 24    | @tusharchou     | First Sprint |
++-----------+----------------------+-------------+---------------+-----------------+--------------+
+| 0.1.2     | Warehousing          | 18th Oct 24 | TBD           | @tusharchou     | Coming Soon  |
++-----------+----------------------+-------------+---------------+-----------------+--------------+
+| 1.0.0     | Ready for Production | 1st Nov 24  | TBD           | TBD             | End Game     |
++-----------+----------------------+-------------+---------------+-----------------+--------------+
 
-Using the example in your own project
--------------------------------------
+Milestone
+---------
 
-If you are new to Read the Docs, you may want to refer to the `Read the Docs User documentation <https://docs.readthedocs.io/>`_.
+- [x] 0.1.0 : Done+ Published Library on `PyPI <https://pypi.org/project/local-data-platform/>`_
 
-If you are copying this code in order to get started with your documentation, you need to:
+- [ ] 0.1.1 : In Progress- `Demo BigQuery compatibility <https://github.com/tusharchou/local-data-platform/milestone/2>`_
 
-#. place your ``docs/`` folder alongside your Python project. If you are starting a new project, you can adapt the `pyproject.toml` example configuration.
-#. use your existing project repository or create a new repository on Github, GitLab, Bitbucket or another host supported by Read the Docs
-#. copy ``.readthedocs.yaml`` and the ``docs/`` folder into your project.
-#. customize all the files, replacing example contents.
-#. add your own Python project, replacing the ``pyproject.toml`` configuration and ``lumache.py`` module.
-#. rebuild the documenation locally to see that it works.
-#. *finally*, register your project on Read the Docs, see `Importing Your Documentation <https://docs.readthedocs.io/en/stable/intro/import-guide.html>`_.
+- [x] 0.1.1 : Done+ `Documentation: Updated README to explain clearly problem and plan of execution <https://github.com/tusharchou/local-data-platform/issues/6>`_
 
+- [ ] PR : In Progress- `Feature: Simply query NEAR Coin GCP Data Lake through BiqQuery <https://github.com/tusharchou/local-data-platform/pull/25>`_
 
-Read the Docs tutorial
-----------------------
+- [ ] PR : In Progress- `Feature: Privately store NYC Yellow Taxi Rides Data in Local Data Platform <https://github.com/tusharchou/local-data-platform/pull/26>`_
 
-To get started with Read the Docs, you may also refer to the `Read the Docs tutorial <https://docs.readthedocs.io/en/stable/tutorial/>`__.
-It provides a full walk-through of building an example project similar to the one in this repository.
+- [ ] FR : In Progress- `Change: Easily solve for User's Local Data Need <https://github.com/tusharchou/local-data-platform/pull/28>`_
+
+- [ ] IS : In Progress- `Documentation: Align on Product Framework <https://github.com/tusharchou/local-data-platform/issues/29>`_
+
+- [ ] IS : In Progress- `Request: Source Parquet Table <https://github.com/tusharchou/local-data-platform/issues/24>`_
+
+- [ ] IS : In Progress- `Request: Source Iceberg Table <https://github.com/tusharchou/local-data-platform/issues/21>`_
+
+- [ ] IS : In Progress- `Request: Target Iceberg Table <https://github.com/tusharchou/local-data-platform/issues/22>`_
+
+- [ ] IS : In Progress- `Request: Target.put() Iceberg Table <https://github.com/tusharchou/local-data-platform/issues/20>`_
+
+- [ ] IS : In Progress- `Request: NYCYellowTaxi.rides.put() <https://github.com/tusharchou/local-data-platform/issues/8>`_
+
+- [ ] IS : In Progress- `Request: NYCYellowTaxi.rides.get() <https://github.com/tusharchou/local-data-platform/issues/3>`_
+
+- [ ] IS : In Progress- `Request: test.iceberg.exception() <https://github.com/tusharchou/local-data-platform/issues/1>`_
+
+- [ ] IS : In Progress- `Documentation: NEAR Trader-How to use NEAR Data Lake <https://github.com/tusharchou/local-data-platform/issues/12>`_
+
+- [ ] IS : In Progress- `Request: Source.get() BigQuery <https://github.com/tusharchou/local-data-platform/issues/19>`_
+
+- [ ] IS : To-do- `Request: Iceberg Partitioning and Version Control <https://github.com/tusharchou/local-data-platform/issues/29>`_
+
+- [ ] IS : To-do- `Request: Align on Product Framework <https://github.com/tusharchou/local-data-platform/issues/29>`_
+
+- [ ] IS : In Progress- `Align on Product Framework <https://github.com/tusharchou/local-data-platform/issues/29>`_
+
+- [ ] 0.1.2 : To-do Continuous Integration
+
+- [ ] 0.1.9 : To-do `Launch Documentation <https://github.com/tusharchou/local-data-platform/milestone/2>`_
+
+- [ ] 0.2.0 : To-do `Cloud Integration <https://github.com/tusharchou/local-data-platform/milestone/3>`_
+
+- [ ] 1.0.0 : To-do `Demo BigQuery compatibility <https://github.com/tusharchou/local-data-platform/milestone/2>`_
+
+References
+----------
+
+`iceberg-python <https://py.iceberg.apache.org>`_
+
+`near-data-lake <https://docs.near.org/concepts/advanced/near-lake-framework>`_
+
+`duckdb <https://duckdb.org/docs/extensions/iceberg.html>`_
+
+Self Promotion
+--------------
+
+`Reliable Change Data Capture using Iceberg <https://medium.com/@tushar.choudhary.de/reliable-cdc-apache-spark-ingestion-pipeline-using-iceberg-5d8f0fee6fd6>`_
+
+`Introduction to pyiceberg <https://medium.com/@tushar.choudhary.de/internals-of-apache-pyiceberg-10c2302a5c8b>`_

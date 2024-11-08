@@ -3,6 +3,7 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "lumache"
-authors = [{name = "Graziella", email = "graziella@lumache"}]
-dynamic = ["version", "description"]
+version = "0.1.1"
+description = "Python library for iceberg lake house on your local"
+authors = ["Tushar Choudhary <151359025+tusharchou@users.noreply.github.com>"]
+readme = "README.md"
